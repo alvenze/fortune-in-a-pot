@@ -40,11 +40,23 @@ def output_path() -> Path:
         return local / "entry.txt"
 
 
-def main() -> None:
+def main(argv: list[str]) -> None:
     validate(FORTUNE)
+    if "--check" in argv:
+        # Report the gate facts about the fortune without writing anything.
+        print(f"{len(FORTUNE)} characters, 1 line, UTF-8 clean")
+        return
     path = output_path()
     path.write_text(FORTUNE, encoding="utf-8")
+    # Read the file back and compare it byte for byte: what the judge
+    # reads must be exactly the fortune that passed the gate check.
+    written = path.read_bytes()
+    if written != FORTUNE.encode("utf-8"):
+        raise ValueError("written file does not match the fortune byte for byte")
+    validate(written.decode("utf-8"))
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    main(sys.argv[1:])
